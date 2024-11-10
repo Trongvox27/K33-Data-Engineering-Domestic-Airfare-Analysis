@@ -14,7 +14,7 @@
 - Language - [**Python**](https://www.python.org)
 
 ## Architecture
-
+![data pipeline architecture](/data-platform/data_architecture.png)
 ## Data Dictionary
 Schema for `flight`
 
@@ -32,6 +32,6 @@ Schema for `baggage`
 
 - Create a Google Cloud Project: This will be the parent environment for managing resources. Go to the [**Google Cloud Console**](https://console.cloud.google.com/) and create a new project.
 - Enable Required APIs:
-    Go to the API & Services section and enable the following:
-        - Compute Engine API (for VMs)
+    Go to the API & Services section and enable the following:  
+        - Compute Engine API (for VMs)  
         - Cloud Storage API (for storage)
