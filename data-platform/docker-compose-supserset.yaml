@@ -1,0 +1,24 @@
+version: '3.3'
+
+services:
+
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    environment:
+      SUPERSET_DATABASE_URI:  postgresql+psycopg2:/airflow:airflow@postgres:5432/superset
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    volumes:
+     - ./superset_config.py:/app/pythonpath/superset_config.py
+    ports:
+      - "8088:8088"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        superset db upgrade &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088
+
+volumes:
+  superset_home:
