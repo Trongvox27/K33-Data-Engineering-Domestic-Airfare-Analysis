@@ -19,13 +19,3 @@
 
 ![data schema](data_schema.png)
 
-
-## Setup
-
-### Setup Project in Google Cloud
-
-- Create a Google Cloud Project: This will be the parent environment for managing resources. Go to the [**Google Cloud Console**](https://console.cloud.google.com/) and create a new project.
-- Enable Required APIs:
-    Go to the API & Services section and enable the following:  
-        - Compute Engine API (for VMs)  
-        - Cloud Storage API (for storage)
