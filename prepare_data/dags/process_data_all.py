@@ -13,7 +13,7 @@ run_date = """{{ (dag_run.execution_date + macros.timedelta(hours=7)).strftime('
 
 
 default_args = {
-    'owner': 'airflow',
+    'owner': 'lethuyduong2000@gmail.com',
     'start_date': datetime(2024, 10, 1),
 }
 
