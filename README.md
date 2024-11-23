@@ -15,16 +15,10 @@
 
 ## Architecture
 ![data pipeline architecture](/data-platform/data_architecture.png)
-## Data Dictionary
-Schema for `flight`
+## Data Schema
 
-Schema for `price`
+![data schema](data_schema.png)
 
-Schema for `airline`
-
-Schema for `airport`
-
-Schema for `baggage`
 
 ## Setup
 
