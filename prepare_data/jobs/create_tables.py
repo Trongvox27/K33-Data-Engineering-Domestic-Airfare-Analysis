@@ -4,20 +4,17 @@ from sqlalchemy import create_engine
 import psycopg2
 
 
-# edit later
-connection_str = "postgresql://airflow:airflow@34.171.191.111:5432/postgres"
-
 def write_postgres(connection_str, df, table_name, mode='append'):
     engine = create_engine(connection_str)
     df.to_sql(table_name, engine, index=False, if_exists=mode)
 
-def read_postgres(query):
+def read_postgres(query, POSTGRES_CONFIG):
     conn = psycopg2.connect(
-        dbname="postgres",
-        user="airflow",
-        password="airflow",
-        host="34.171.191.111",
-        port="5432"
+        dbname=POSTGRES_CONFIG['dbname'],
+        user=POSTGRES_CONFIG['user'],
+        password=POSTGRES_CONFIG['password'],
+        host=POSTGRES_CONFIG['host'],
+        port=POSTGRES_CONFIG['port']
     )    
     return pd.read_sql_query(query, conn)
 
@@ -27,7 +24,7 @@ def read_excel(path, sheet_name):
 def write_table_from_sheet(df, table_name, connection_str):
     write_postgres(connection_str, df, table_name, mode='replace')
 
-def create_flight_table(table_name):
+def create_flight_table(table_name, connection_str, POSTGRES_CONFIG):
     query = \
     """
     with tmp as (select
@@ -48,12 +45,12 @@ def create_flight_table(table_name):
     select tmp.*, airline.airline_id as airline_id
     from tmp left join airline on tmp.prefix_flight=airline.iata_code
     """
-    df = read_postgres(query).drop("prefix_flight", axis=1).reset_index()\
+    df = read_postgres(query, POSTGRES_CONFIG).drop("prefix_flight", axis=1).reset_index()\
         .rename(columns={'index':'flight_id'})
     # print(df.head(10))
     write_postgres(connection_str, df, table_name, mode='replace')
 
-def create_baggage_table(table_name):
+def create_baggage_table(table_name, connection_str, POSTGRES_CONFIG):
     query = """
             with fr as (
                 select distinct
@@ -81,12 +78,12 @@ def create_baggage_table(table_name):
                     and fr.departure_time_minute = f.departure_time_minute
                     and fr.date_departure=f.date_departure
             """
-    df = read_postgres(query).reset_index()\
+    df = read_postgres(query, POSTGRES_CONFIG).reset_index()\
         .rename(columns={'index':'baggage_id'})
     # print(df.head(10))
     write_postgres(connection_str, df, table_name, mode='replace')
 
-def create_price_table(table_name):
+def create_price_table(table_name, connection_str, POSTGRES_CONFIG):
     query = \
     """
     with fr as (
@@ -125,24 +122,24 @@ def create_price_table(table_name):
     """
     # left join baggage bg on
         #     fr.title = bg.title and fr.amount = bg.amount and f.flight_id=bg.flight_id
-    df = read_postgres(query)
+    df = read_postgres(query, POSTGRES_CONFIG)
     write_postgres(connection_str, df, table_name, mode='replace')
 
-def dedup_raw():
+def dedup_raw(connection_str, POSTGRES_CONFIG):
     query = \
     """
     select distinct *
     from flight_raw 
     """
-    df = read_postgres(query)
+    df = read_postgres(query, POSTGRES_CONFIG)
     write_postgres(connection_str, df, 'flight_raw', mode='replace')
 
-def process():
+def process(POSTGRES_CONFIG):
     raw_name = 'flight_raw'
-    
-   
+    connection_str = f"postgresql://{POSTGRES_CONFIG[user]}:{POSTGRES_CONFIG[password]}@{POSTGRES_CONFIG[host]}:{POSTGRES_CONFIG[port]}/{POSTGRES_CONFIG[dbname]}"
+
     print("===Airline table===")
-    xlsx_file_path = "./data/Flight_Schema.xlsx"
+    xlsx_file_path = "../data/Flight_Schema.xlsx"
     airline_df = read_excel(xlsx_file_path, "Airlines")
     write_table_from_sheet(airline_df, 'airline', connection_str)
     
@@ -151,13 +148,13 @@ def process():
     write_table_from_sheet(inter_airport_df, 'international_airport', connection_str)
 
     print("===Flight table===")
-    create_flight_table("flight")
+    create_flight_table("flight", connection_str, POSTGRES_CONFIG)
 
     print("===Baggage table===")
-    create_baggage_table("baggage")
+    create_baggage_table("baggage", connection_str, POSTGRES_CONFIG)
 
     print("===Price table===")
-    create_price_table('price')
+    create_price_table('price', connection_str, POSTGRES_CONFIG)
     # dedup_raw()
 
     print("Done")

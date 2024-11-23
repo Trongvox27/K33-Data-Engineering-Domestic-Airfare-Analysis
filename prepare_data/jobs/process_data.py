@@ -1,9 +1,8 @@
 import pandas as pd
 import json
 from sqlalchemy import create_engine
+import gcsfs
 
-# edit later
-connection_str = "postgresql://airflow:airflow@34.171.191.111:5432/postgres"
 
 def write_postgres(connection_str, df, table_name, mode='append'):
     engine = create_engine(connection_str)
@@ -32,10 +31,19 @@ def get_routes():
 ]
 
 
-def process_data(file_name):
-    with open(file_name, 'r') as file:
-        data = json.load(file)
+def process_data(run_date, POSTGRES_CONFIG):
+    # Postgres connection string
+    connection_str = f"postgresql://{POSTGRES_CONFIG[user]}:{POSTGRES_CONFIG[password]}@{POSTGRES_CONFIG[host]}:{POSTGRES_CONFIG[port]}/{POSTGRES_CONFIG[dbname]}"
+
+    # read raw data from cloud storage
+    y, m, d = run_date.split('-')
+    gcs_path = f'dataraw-duongle/data_collect_{y[2:][m][d]}.json'
     
+    fs = gcsfs.GCSFileSystem()
+    with fs.open(gcs_path, 'rb') as file:
+        data = json.load(file)
+
+    # process data
     l_route = get_routes()
 
     for route in l_route:
@@ -81,32 +89,7 @@ def process_data(file_name):
             print("ERROR: ", e)
             print(route)
             
-    
-    
 
-if __name__ == '__main__':
-    l_file = ['./data/data_collect_241010.json',
-              './data/data_collect_241011.json',
-              './data/data_collect_241012.json',
-              './data/data_collect_241013.json',
-              './data/data_collect_241014.json',
-              './data/data_collect_241016.json',
-              './data/data_collect_241017.json',
-              './data/data_collect_241018.json',
-              './data/data_collect_241021.json',
-              './data/data_collect_241023.json',
-              './data/data_collect_241025.json',
-              './data/data_collect_241026.json',
-              './data/data_collect_241029.json',
-              './data/data_collect_241031.json',
-              './data/data_collect_241102.json',
-              './data/data_collect_241104.json',
-              './data/data_collect_241106.json'
-
-              ]
-    for file_name in l_file:
-        print(file_name)
-        process_data(file_name)
 
 
 
